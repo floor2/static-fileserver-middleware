@@ -1,0 +1,9 @@
+{
+  "name": "static-fileserver-middleware",
+  "version": "0.0.1",
+  "main": "index.js",
+  "license": "MIT",
+  "dependencies": {
+    "filesize": "^5.0.1"
+  }
+}
