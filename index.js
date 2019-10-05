@@ -32,17 +32,18 @@ function li(html) { return '<li>' + html + '</li>'; }
 /**
  * Generate html of directory listing
  */
-async function directoryListing(dirPath, url) {
-  var files = await readdir(dirPath);
-  var details = await Promise.all(files.map(filePath => stat(dirPath, filePath)));
+async function directoryListing(fullFilePath, fullFileURL) {
+  var files = await readdir(fullFilePath);
+  var details = await Promise.all(files.map(filePath => stat(fullFilePath, filePath)));
 
-  var li = details.map(function (file) {
-    var href = URL.resolve(url, file.name);
+  var folderURL = fullFileURL.endsWith('/') ? fullFileURL : fullFileURL + '/';
+  var items = details.map(function (file) {
+    var href = URL.resolve(folderURL, file.name);
     return '<a href=' + href + '>' + file.name + ' (' + filesize(file.size) + ')' + '</a>';
   }).map(li).join('');
 
-  var folderName = path.basename(dirPath);
-  return '<h1>' + folderName + '</h1><ul>' + li + '</ul>';
+  var folderName = path.basename(fullFilePath);
+  return '<h1>' + folderName + '</h1><ul>' + items + '</ul>';
 }
 
 /**
@@ -57,23 +58,20 @@ function static(_options) {
 
   var rootDir = path.resolve(options.rootDir);
 
-  var sendFileOpts = Object.assign({
-    root: rootDir
-  }, _options.sendFileOpts);
-
   return async function staticFileServer(req, res, next) {
-    var fullPath = path.join(rootDir, req.url);
+    var fullFilePath = path.join(rootDir, req.url);
+    var fullFileURL = path.join(baseUrl, req.url);
     var filename = path.basename(req.url);
     try {
       var stats = await stat(rootDir, req.url);
 
       if (stats.isFile()) {
         res.header('Content-Disposition', 'attachment; filename="' + filename + '"');
-        fs.createReadStream(fullPath).pipe(res);
+        fs.createReadStream(fullFilePath).pipe(res);
         return;
       }
       else if (stats.isDirectory()) {
-        return res.send(await directoryListing(fullPath, baseUrl));
+        return res.send(await directoryListing(fullFilePath, fullFileURL));
       }
     } catch(e) {
       next(e);
