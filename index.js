@@ -59,11 +59,12 @@ function static(_options) {
   var rootDir = path.resolve(options.rootDir);
 
   return async function staticFileServer(req, res, next) {
-    var fullFilePath = path.join(rootDir, req.url);
-    var fullFileURL = path.join(baseUrl, req.url);
-    var filename = path.basename(req.url);
+    var url = decodeURIComponent(req.url);
+    var fullFilePath = path.join(rootDir, url);
+    var fullFileURL = path.join(baseUrl, url);
+    var filename = path.basename(url);
     try {
-      var stats = await stat(rootDir, req.url);
+      var stats = await stat(rootDir, url);
 
       if (stats.isFile()) {
         res.header('Content-Disposition', 'attachment; filename="' + filename + '"');
